@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/index.dart';
 import '../../providers/index.dart';
 import '../../utils/index.dart';
+import 'complaint_management_screen.dart';
+import 'fee_management_screen.dart';
+import 'room_management_screen.dart';
 
 /// Admin dashboard with tabs
 class AdminDashboard extends ConsumerStatefulWidget {
@@ -48,9 +51,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
-            Tab(icon: Icon(Icons.report_problem), text: 'Complaints'),
-            Tab(icon: Icon(Icons.payment), text: 'Fees'),
             Tab(icon: Icon(Icons.room), text: 'Rooms'),
+            Tab(icon: Icon(Icons.payment), text: 'Fees'),
+            Tab(icon: Icon(Icons.report_problem), text: 'Complaints'),
           ],
         ),
       ),
@@ -58,9 +61,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
         controller: _tabController,
         children: [
           _OverviewTab(user: widget.user),
-          _ComplaintsTab(),
-          _FeesTab(),
-          _RoomsTab(),
+          const RoomManagementScreen(),
+          const FeeManagementScreen(),
+          const ComplaintManagementScreen(),
         ],
       ),
     );
@@ -266,169 +269,6 @@ class _StatCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Complaints management tab
-class _ComplaintsTab extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final complaintsAsync = ref.watch(allComplaintsProvider(null));
-
-    return complaintsAsync.when(
-      data: (complaints) {
-        if (complaints.isEmpty) {
-          return const Center(child: Text('No complaints'));
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: complaints.length,
-          itemBuilder: (context, index) {
-            final complaint = complaints[index];
-            return Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.report_problem,
-                  color: complaint.isHighPriority ? Colors.red : Colors.orange,
-                ),
-                title: Text('${complaint.studentName} - ${complaint.category}'),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      complaint.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Status: ${complaint.status} • Priority: ${complaint.priority}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    if (complaint.determinedCategory != null)
-                      Text(
-                        'AI Category: ${complaint.determinedCategory}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.blue,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                  ],
-                ),
-                trailing: Text(complaint.createdAt.relativeTime),
-              ),
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) =>
-          Center(child: Text('Error: ${error.toString()}')),
-    );
-  }
-}
-
-/// Fees management tab
-class _FeesTab extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final feesAsync = ref.watch(allFeesProvider(null));
-
-    return feesAsync.when(
-      data: (fees) {
-        if (fees.isEmpty) {
-          return const Center(child: Text('No fees'));
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: fees.length,
-          itemBuilder: (context, index) {
-            final fee = fees[index];
-            return Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.payment,
-                  color: fee.isPaid ? Colors.green : Colors.red,
-                ),
-                title: Text(
-                  '${fee.studentName} - ${fee.feeType.replaceAll('_', ' ').toTitleCase()}',
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Amount: ${fee.amount.toCurrency}'),
-                    Text('Due: ${fee.dueDate.formatted}'),
-                  ],
-                ),
-                trailing: Chip(
-                  label: Text(fee.status),
-                  backgroundColor: fee.isPaid ? Colors.green : Colors.red,
-                  labelStyle: const TextStyle(color: Colors.white),
-                ),
-              ),
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) =>
-          Center(child: Text('Error: ${error.toString()}')),
-    );
-  }
-}
-
-/// Rooms management tab
-class _RoomsTab extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final roomsAsync = ref.watch(allRoomsProvider);
-
-    return roomsAsync.when(
-      data: (rooms) {
-        if (rooms.isEmpty) {
-          return const Center(child: Text('No rooms'));
-        }
-
-        // Group rooms by block
-        final roomsByBlock = <String, List<RoomModel>>{};
-        for (final room in rooms) {
-          roomsByBlock.putIfAbsent(room.blockName, () => []).add(room);
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: roomsByBlock.length,
-          itemBuilder: (context, blockIndex) {
-            final block = roomsByBlock.keys.elementAt(blockIndex);
-            final blockRooms = roomsByBlock[block]!;
-
-            return Card(
-              child: ExpansionTile(
-                title: Text('Block $block (${blockRooms.length} rooms)'),
-                children: blockRooms.map((room) {
-                  return ListTile(
-                    leading: Icon(
-                      Icons.room,
-                      color: room.isAvailable ? Colors.green : Colors.red,
-                    ),
-                    title: Text(room.roomNumber),
-                    subtitle: Text(
-                      'Occupancy: ${room.currentOccupancy}/${room.capacity} • ${room.roomType}',
-                    ),
-                    trailing: Text(room.condition),
-                  );
-                }).toList(),
-              ),
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) =>
-          Center(child: Text('Error: ${error.toString()}')),
     );
   }
 }

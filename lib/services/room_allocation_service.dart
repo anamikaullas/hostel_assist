@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
+import 'package:uuid/uuid.dart';
 
 import '../constants/index.dart';
 import '../models/index.dart';
@@ -12,6 +13,7 @@ import 'firebase_service.dart';
 class RoomAllocationService {
   final FirebaseService _firebaseService;
   final Logger _logger = Logger();
+  final Uuid _uuid = const Uuid();
 
   RoomAllocationService({FirebaseService? firebaseService})
     : _firebaseService = firebaseService ?? FirebaseService();
@@ -364,6 +366,119 @@ class RoomAllocationService {
       if (e is HostelAssistException) rethrow;
       throw FirestoreException(
         'Failed to fetch room for student: ${e.toString()}',
+        details: e,
+      );
+    }
+  }
+
+  /// Create a new room
+  Future<RoomModel> createRoom({
+    required String roomNumber,
+    required String blockName,
+    required int floor,
+    required String roomType,
+    required int capacity,
+    required String condition,
+    List<String> amenities = const [],
+  }) async {
+    try {
+      _logger.i('Creating new room: $roomNumber');
+
+      final roomId = _uuid.v4();
+      final now = DateTime.now();
+
+      final room = RoomModel(
+        roomId: roomId,
+        blockName: blockName,
+        floorNumber: floor,
+        roomType: roomType,
+        capacity: capacity,
+        currentOccupancy: 0,
+        occupantIds: [],
+        condition: condition,
+        amenities: amenities,
+        monthlyRent: 5000.0,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await _firestore
+          .collection(AppConstants.collectionRooms)
+          .doc(roomId)
+          .set(room.toJson());
+
+      _logger.i('Room created successfully: $roomId');
+      return room;
+    } catch (e) {
+      _logger.e('Error creating room', error: e);
+      throw FirestoreException(
+        'Failed to create room: ${e.toString()}',
+        details: e,
+      );
+    }
+  }
+
+  /// Update room details
+  Future<void> updateRoom({
+    required String roomId,
+    String? roomNumber,
+    String? blockName,
+    int? floor,
+    String? roomType,
+    int? capacity,
+    String? condition,
+    List<String>? amenities,
+  }) async {
+    try {
+      _logger.i('Updating room: $roomId');
+
+      final updateData = <String, dynamic>{'updatedAt': Timestamp.now()};
+
+      if (blockName != null) updateData['blockName'] = blockName;
+      if (floor != null) updateData['floorNumber'] = floor;
+      if (roomType != null) updateData['roomType'] = roomType;
+      if (capacity != null) updateData['capacity'] = capacity;
+      if (condition != null) updateData['condition'] = condition;
+      if (amenities != null) updateData['amenities'] = amenities;
+
+      await _firestore
+          .collection(AppConstants.collectionRooms)
+          .doc(roomId)
+          .update(updateData);
+
+      _logger.i('Room updated successfully');
+    } catch (e) {
+      _logger.e('Error updating room', error: e);
+      throw FirestoreException(
+        'Failed to update room: ${e.toString()}',
+        details: e,
+      );
+    }
+  }
+
+  /// Delete a room (only if unoccupied)
+  Future<void> deleteRoom(String roomId) async {
+    try {
+      _logger.i('Deleting room: $roomId');
+
+      final room = await getRoomById(roomId);
+      if (room.currentOccupancy > 0) {
+        throw RoomAllocationException(
+          'Cannot delete room with occupants. Please deallocate all students first.',
+        );
+      }
+
+      await _firestore
+          .collection(AppConstants.collectionRooms)
+          .doc(roomId)
+          .delete();
+
+      _logger.i('Room deleted successfully');
+    } catch (e) {
+      _logger.e('Error deleting room', error: e);
+      if (e is HostelAssistException) rethrow;
+      throw FirestoreException(
+        'Failed to delete room: ${e.toString()}',
         details: e,
       );
     }

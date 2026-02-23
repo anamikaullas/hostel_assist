@@ -441,4 +441,24 @@ class ComplaintService {
       );
     }
   }
+
+  /// Delete a complaint (admin only)
+  Future<void> deleteComplaint(String complaintId) async {
+    try {
+      _logger.i('Deleting complaint: $complaintId');
+
+      await _firestore
+          .collection(AppConstants.collectionComplaints)
+          .doc(complaintId)
+          .delete();
+
+      _logger.i('Complaint deleted successfully');
+    } catch (e) {
+      _logger.e('Error deleting complaint', error: e);
+      throw FirestoreException(
+        'Failed to delete complaint: ${e.toString()}',
+        details: e,
+      );
+    }
+  }
 }
