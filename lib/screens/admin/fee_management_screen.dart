@@ -247,7 +247,7 @@ class _FeeManagementScreenState extends ConsumerState<FeeManagementScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: feeType,
+                  initialValue: feeType,
                   decoration: const InputDecoration(labelText: 'Fee Type'),
                   items: const [
                     DropdownMenuItem(

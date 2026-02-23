@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 
@@ -18,6 +22,7 @@ class ComplaintService {
     : _firebaseService = firebaseService ?? FirebaseService();
 
   FirebaseFirestore get _firestore => _firebaseService.firestore;
+  FirebaseStorage get _storage => _firebaseService.storage;
 
   // Keyword-based classification dictionaries
   static const Map<String, List<String>> _categoryKeywords = {
@@ -151,6 +156,75 @@ class ComplaintService {
     'later',
   ];
 
+  /// Create a new complaint with image upload support
+  Future<ComplaintModel> createComplaint({
+    required String studentId,
+    required String studentName,
+    required String category,
+    required String description,
+    XFile? imageFile,
+  }) async {
+    try {
+      _logger.i('Creating complaint for student: $studentId');
+
+      String? imageUrl;
+
+      // Upload image if provided
+      if (imageFile != null) {
+        _logger.i('Uploading complaint image...');
+        imageUrl = await _uploadImage(imageFile);
+        _logger.i('Image uploaded: $imageUrl');
+      }
+
+      // Submit complaint using existing method
+      final complaint = await submitComplaint(
+        studentId: studentId,
+        studentName: studentName,
+        category: category,
+        description: description,
+        imageUrl: imageUrl,
+      );
+
+      return complaint;
+    } catch (e) {
+      _logger.e('Error creating complaint', error: e);
+      if (e is HostelAssistException) rethrow;
+      throw FirestoreException(
+        'Failed to create complaint: ${e.toString()}',
+        details: e,
+      );
+    }
+  }
+
+  /// Upload image to Firebase Storage
+  Future<String> _uploadImage(XFile imageFile) async {
+    try {
+      final complaintId = _uuid.v4();
+      final fileName =
+          '${complaintId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final storageRef = _storage.ref().child(
+        '${AppConstants.storageComplaintImages}/$complaintId/$fileName',
+      );
+
+      // Upload file
+      final uploadTask = storageRef.putFile(File(imageFile.path));
+      final snapshot = await uploadTask;
+
+      // Get download URL
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      _logger.i('Image uploaded successfully: $downloadUrl');
+      return downloadUrl;
+    } catch (e) {
+      _logger.e('Error uploading image', error: e);
+      throw FirestoreException(
+        'Failed to upload image: ${e.toString()}',
+        details: e,
+      );
+    }
+  }
+
+  ///
   /// Submit a new complaint with automatic classification
   Future<ComplaintModel> submitComplaint({
     required String studentId,
@@ -357,7 +431,7 @@ class ComplaintService {
     try {
       final updates = <String, dynamic>{
         'status': status,
-        if (adminRemarks != null) 'adminRemarks': adminRemarks,
+        'adminRemarks': ?adminRemarks,
       };
 
       if (status == AppConstants.complaintResolved) {

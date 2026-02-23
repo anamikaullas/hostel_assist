@@ -214,8 +214,10 @@ class _ComplaintManagementScreenState
                                 ),
                               ],
                               const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
+                              Wrap(
+                                alignment: WrapAlignment.end,
+                                spacing: 8,
+                                runSpacing: 8,
                                 children: [
                                   if (!complaint.isResolved) ...[
                                     if (complaint.status == 'pending')
@@ -230,7 +232,6 @@ class _ComplaintManagementScreenState
                                           backgroundColor: Colors.orange,
                                         ),
                                       ),
-                                    const SizedBox(width: 8),
                                     ElevatedButton.icon(
                                       onPressed: () =>
                                           _showRemarkDialog(complaint),
@@ -240,7 +241,6 @@ class _ComplaintManagementScreenState
                                         backgroundColor: Colors.green,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
                                   ],
                                   OutlinedButton.icon(
                                     onPressed: () => _showRemarkDialog(
@@ -250,7 +250,6 @@ class _ComplaintManagementScreenState
                                     icon: const Icon(Icons.edit),
                                     label: const Text('Add Remark'),
                                   ),
-                                  const SizedBox(width: 8),
                                   OutlinedButton.icon(
                                     onPressed: () =>
                                         _deleteComplaint(complaint),

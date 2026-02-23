@@ -207,7 +207,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                   // Year selection
                   DropdownButtonFormField<int>(
-                    value: _selectedYear,
+                    initialValue: _selectedYear,
                     decoration: const InputDecoration(
                       labelText: 'Academic Year',
                       prefixIcon: Icon(Icons.calendar_today),

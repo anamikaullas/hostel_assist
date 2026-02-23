@@ -1,5 +1,6 @@
 /// Application-wide constants
 /// Centralized configuration for the HostelAssist app
+library;
 
 class AppConstants {
   // Prevent instantiation

@@ -28,6 +28,7 @@ dependencies:
   uuid: ^4.5.1
   intl: ^0.20.1
   logger: ^2.4.0
+  shared_preferences: ^2.3.3
   
   # HTTP & Networking
   http: ^1.2.2

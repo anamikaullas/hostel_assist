@@ -211,7 +211,7 @@ class _RoomManagementScreenState extends ConsumerState<RoomManagementScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: roomType,
+                  initialValue: roomType,
                   decoration: const InputDecoration(labelText: 'Room Type'),
                   items: const [
                     DropdownMenuItem(value: 'Single', child: Text('Single')),
@@ -231,7 +231,7 @@ class _RoomManagementScreenState extends ConsumerState<RoomManagementScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: condition,
+                  initialValue: condition,
                   decoration: const InputDecoration(labelText: 'Condition'),
                   items: const [
                     DropdownMenuItem(value: 'good', child: Text('Good')),

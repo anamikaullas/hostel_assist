@@ -109,7 +109,7 @@ class RoomModel {
 
   /// Get room number string (e.g., "A-101")
   String get roomNumber =>
-      '$blockName-${floorNumber}${roomId.substring(roomId.length - 2)}';
+      '$blockName-$floorNumber${roomId.substring(roomId.length - 2)}';
 
   @override
   String toString() {

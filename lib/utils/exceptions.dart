@@ -1,5 +1,6 @@
 /// Custom exceptions for the HostelAssist app
 /// Provides meaningful error messages and types
+library;
 
 /// Base exception class
 class HostelAssistException implements Exception {

@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/index.dart';
 import '../../providers/index.dart';
 import '../../utils/index.dart';
+import 'add_complaint_screen.dart';
+import 'chatbot_screen.dart';
+import 'complaint_detail_screen.dart';
 
 /// Student dashboard with bottom navigation
 class StudentDashboard extends ConsumerStatefulWidget {
@@ -216,7 +219,7 @@ class _HomeTab extends ConsumerWidget {
   }
 }
 
-/// Complaints tab
+/// Complaints tab with add complaint functionality
 class _ComplaintsTab extends ConsumerWidget {
   final UserModel user;
 
@@ -226,63 +229,150 @@ class _ComplaintsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final complaintsAsync = ref.watch(complaintsByStudentProvider(user.uid));
 
-    return complaintsAsync.when(
-      data: (complaints) {
-        if (complaints.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle, size: 64, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text(
-                  'No complaints',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                const Text('You have not submitted any complaints yet'),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: complaints.length,
-          itemBuilder: (context, index) {
-            final complaint = complaints[index];
-            return Card(
-              child: ListTile(
-                leading: Icon(
-                  Icons.report_problem,
-                  color: complaint.isHighPriority ? Colors.red : Colors.orange,
-                ),
-                title: Text(complaint.category),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      complaint.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Status: ${complaint.status} • Priority: ${complaint.priority}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-                trailing: Text(complaint.createdAt.relativeTime),
+    return Scaffold(
+      body: complaintsAsync.when(
+        data: (complaints) {
+          if (complaints.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No complaints',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('You have not submitted any complaints yet'),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddComplaintScreen(user: user),
+                        ),
+                      );
+                      if (result == true) {
+                        ref.invalidate(complaintsByStudentProvider(user.uid));
+                      }
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Submit Complaint'),
+                  ),
+                ],
               ),
             );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) =>
-          Center(child: Text('Error: ${error.toString()}')),
+          }
+
+          // Sort complaints by date (newest first)
+          final sortedComplaints = complaints.toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: sortedComplaints.length,
+            itemBuilder: (context, index) {
+              final complaint = sortedComplaints[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ComplaintDetailScreen(complaint: complaint),
+                      ),
+                    );
+                  },
+                  leading: CircleAvatar(
+                    backgroundColor: complaint.isHighPriority
+                        ? Colors.red.shade100
+                        : Colors.orange.shade100,
+                    child: Icon(
+                      Icons.report_problem,
+                      color: complaint.isHighPriority
+                          ? Colors.red
+                          : Colors.orange,
+                    ),
+                  ),
+                  title: Text(
+                    complaint.category.toTitleCase(),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(
+                        complaint.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Chip(
+                            label: Text(
+                              complaint.status.toUpperCase(),
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                            backgroundColor: _getStatusColor(complaint.status),
+                            labelStyle: const TextStyle(color: Colors.white),
+                            padding: EdgeInsets.zero,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            complaint.createdAt.relativeTime,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) =>
+            Center(child: Text('Error: ${error.toString()}')),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddComplaintScreen(user: user),
+            ),
+          );
+          if (result == true) {
+            ref.invalidate(complaintsByStudentProvider(user.uid));
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('New Complaint'),
+      ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange;
+      case 'in_progress':
+        return Colors.blue;
+      case 'resolved':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
   }
 }
 
@@ -452,7 +542,7 @@ class _MessTab extends ConsumerWidget {
   }
 }
 
-/// Chat tab (simplified - just shows placeholder)
+/// Chat tab with full Gemini AI integration
 class _ChatTab extends ConsumerWidget {
   final UserModel user;
 
@@ -460,23 +550,6 @@ class _ChatTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.chat, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text('AI Chatbot', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              'Chat feature coming soon! You can ask about complaints, fees, mess menu, and more.',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
+    return ChatbotScreen(user: user);
   }
 }
