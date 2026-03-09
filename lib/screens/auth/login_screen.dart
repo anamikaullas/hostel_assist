@@ -74,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo/Icon
-                  const Icon(Icons.home, size: 80, color: Colors.blue),
+                  Image.asset('lib/images/logo.png', height: 80, width: 80),
                   const SizedBox(height: 16),
 
                   // Title
@@ -182,29 +182,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
 
                   const SizedBox(height: 32),
-
-                  // Demo credentials info
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Demo Credentials:',
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Text('Student: ${AppConstants.demoStudentEmail}'),
-                        Text('Admin: ${AppConstants.demoAdminEmail}'),
-                        Text('Password: ${AppConstants.demoPassword}'),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),

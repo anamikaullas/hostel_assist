@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/index.dart';
-import '../../services/gemini_service.dart';
+import '../../services/grok_service.dart';
 import '../../utils/index.dart';
 
-/// AI Chatbot screen with Gemini API integration
-/// Features: Real-time chat, API key configuration, conversation history
+/// AI Chatbot screen powered by xAI Grok
+/// Features: Real-time chat, API key configuration, hostel-tailored responses
 class ChatbotScreen extends ConsumerStatefulWidget {
   final UserModel user;
 
@@ -19,7 +19,7 @@ class ChatbotScreen extends ConsumerStatefulWidget {
 class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final GeminiService _geminiService = GeminiService();
+  final GrokService _grokService = GrokService();
 
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
@@ -33,7 +33,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   }
 
   Future<void> _initializeService() async {
-    await _geminiService.initialize();
+    await _grokService.initialize();
     setState(() => _isInitialized = true);
   }
 
@@ -42,14 +42,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       ChatMessage(
         text: '''👋 Hi ${widget.user.fullName}!
 
-I'm your AI hostel assistant powered by Gemini. I can help you with:
+I'm HostelBot, your AI assistant powered by Grok. I can help you with:
 
 🚨 Complaint status and submissions
 💰 Fee information and payments
 🍽️ Mess menu and feedback
 🏠 Room details and amenities
 📋 Hostel rules and regulations
-🔧 Maintenance requests
+🔧 Maintenance and repair requests
+📚 Study room and facility queries
 
 How can I help you today?''',
         isUser: false,
@@ -82,15 +83,13 @@ How can I help you today?''',
     try {
       // Generate context based on message
       final intent = _detectSimpleIntent(message);
-      final context = await _geminiService.getHostelContext(
-        studentId: widget.user.uid,
-        intent: intent,
-      );
+      final context = _grokService.getHostelContext(intent);
 
-      // Get response from Gemini
-      final response = await _geminiService.sendMessage(
+      // Get response from Grok (falls back to local NLP if no credits)
+      final response = await _grokService.sendMessage(
         message: message,
         context: context,
+        studentId: widget.user.uid,
       );
 
       setState(() {
@@ -149,7 +148,7 @@ How can I help you today?''',
 
   Future<void> _showApiKeyDialog() async {
     final controller = TextEditingController();
-    final currentKey = await _geminiService.getApiKey();
+    final currentKey = await _grokService.getApiKey();
 
     if (currentKey != null && currentKey.isNotEmpty) {
       controller.text = currentKey;
@@ -162,9 +161,9 @@ How can I help you today?''',
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.key, color: Colors.blue),
+            Icon(Icons.key, color: Colors.deepPurple),
             SizedBox(width: 8),
-            Text('Gemini API Key'),
+            Text('Grok API Key'),
           ],
         ),
         content: Column(
@@ -172,20 +171,20 @@ How can I help you today?''',
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Enter your Gemini API key to enable AI chatbot features.',
+              'Enter your xAI Grok API key to enable AI chatbot features.',
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 8),
             const Text(
-              'Get your API key from: https://makersuite.google.com/app/apikey',
-              style: TextStyle(fontSize: 12, color: Colors.blue),
+              'Get your API key from: https://console.x.ai',
+              style: TextStyle(fontSize: 12, color: Colors.deepPurple),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               decoration: const InputDecoration(
                 labelText: 'API Key',
-                hintText: 'AIzaSy...',
+                hintText: 'xai-...',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.vpn_key),
               ),
@@ -202,7 +201,7 @@ How can I help you today?''',
           if (currentKey != null && currentKey.isNotEmpty)
             TextButton(
               onPressed: () async {
-                await _geminiService.clearApiKey();
+                await _grokService.clearApiKey();
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -223,7 +222,7 @@ How can I help you today?''',
                 return;
               }
 
-              final success = await _geminiService.saveApiKey(apiKey);
+              final success = await _grokService.saveApiKey(apiKey);
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -271,17 +270,17 @@ How can I help you today?''',
       body: Column(
         children: [
           // API Key Status Banner
-          if (_isInitialized && !_geminiService.isConfigured)
+          if (_isInitialized && !_grokService.isConfigured)
             Container(
               padding: const EdgeInsets.all(12),
-              color: Colors.orange.shade100,
+              color: Colors.deepPurple.shade50,
               child: Row(
                 children: [
-                  const Icon(Icons.warning, color: Colors.orange),
+                  const Icon(Icons.warning, color: Colors.deepPurple),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'API key not configured. Tap the settings icon to add your Gemini API key.',
+                      'API key not configured. Tap the settings icon to add your Grok API key.',
                       style: TextStyle(fontSize: 13),
                     ),
                   ),
@@ -318,7 +317,7 @@ How can I help you today?''',
                   const CircularProgressIndicator(strokeWidth: 2),
                   const SizedBox(width: 12),
                   Text(
-                    'AI is thinking...',
+                    'Grok is thinking...',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -391,9 +390,13 @@ class _ChatBubble extends StatelessWidget {
         children: [
           if (!message.isUser) ...[
             CircleAvatar(
-              backgroundColor: Colors.blue.shade100,
+              backgroundColor: Colors.deepPurple.shade100,
               radius: 16,
-              child: const Icon(Icons.smart_toy, size: 18, color: Colors.blue),
+              child: const Icon(
+                Icons.smart_toy,
+                size: 18,
+                color: Colors.deepPurple,
+              ),
             ),
             const SizedBox(width: 8),
           ],
