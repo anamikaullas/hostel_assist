@@ -44,7 +44,7 @@ class GrokService {
       final stored = prefs.getString(_apiKeyPrefsKey);
       return (stored != null && stored.isNotEmpty) ? stored : _defaultApiKey;
     } catch (e) {
-      _logger.e('Error getting Grok API key', error: e);
+      _logger.e('Error getting Gemini API key', error: e);
       return _defaultApiKey;
     }
   }
@@ -59,7 +59,7 @@ class GrokService {
       }
       return success;
     } catch (e) {
-      _logger.e('Error saving Grok API key', error: e);
+      _logger.e('Error saving Gemini API key', error: e);
       return false;
     }
   }
@@ -71,7 +71,7 @@ class GrokService {
       _apiKey = null;
       return await prefs.remove(_apiKeyPrefsKey);
     } catch (e) {
-      _logger.e('Error clearing Grok API key', error: e);
+      _logger.e('Error clearing Gemini API key', error: e);
       return false;
     }
   }

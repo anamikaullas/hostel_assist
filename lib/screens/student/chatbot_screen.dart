@@ -42,7 +42,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       ChatMessage(
         text: '''👋 Hi ${widget.user.fullName}!
 
-I'm HostelBot, your AI assistant powered by Grok. I can help you with:
+I'm HostelBot, your AI assistant, I can help you with:
 
 🚨 Complaint status and submissions
 💰 Fee information and payments
@@ -163,7 +163,7 @@ How can I help you today?''',
           children: [
             Icon(Icons.key, color: Colors.deepPurple),
             SizedBox(width: 8),
-            Text('Grok API Key'),
+            Text('Gemini API Key'),
           ],
         ),
         content: Column(
@@ -171,7 +171,7 @@ How can I help you today?''',
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Enter your xAI Grok API key to enable AI chatbot features.',
+              'Enter your xAI Gemini API key to enable AI chatbot features.',
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 8),
@@ -280,7 +280,7 @@ How can I help you today?''',
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'API key not configured. Tap the settings icon to add your Grok API key.',
+                      'API key not configured. Tap the settings icon to add your Gemini API key.',
                       style: TextStyle(fontSize: 13),
                     ),
                   ),
@@ -317,7 +317,7 @@ How can I help you today?''',
                   const CircularProgressIndicator(strokeWidth: 2),
                   const SizedBox(width: 12),
                   Text(
-                    'Grok is thinking...',
+                    'AI is thinking...',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],

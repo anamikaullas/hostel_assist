@@ -21,14 +21,7 @@ class StudentDashboard extends ConsumerStatefulWidget {
 class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   int _selectedIndex = 0;
 
-  static const _tabTitles = [
-    'Home',
-    'Complaints',
-    'Fees',
-    'Mess',
-    'Notices',
-    'Assistant',
-  ];
+  static const _tabTitles = ['Home', 'Complaints', 'Fees', 'Mess', 'Assistant'];
 
   @override
   Widget build(BuildContext context) {
@@ -41,16 +34,37 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8),
-          child: CircleAvatar(
-            backgroundColor: colorScheme.primaryContainer,
-            child: Text(
-              initial,
-              style: TextStyle(
-                color: colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        leading: PopupMenuButton<String>(
+          offset: const Offset(0, 56),
+          tooltip: 'Profile',
+          onSelected: (value) async {
+            if (value == 'logout') {
+              await ref.read(loginProvider.notifier).logout();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: 'logout',
+              child: Row(
+                children: const [
+                  Icon(Icons.logout, size: 20),
+                  SizedBox(width: 10),
+                  Text('Logout'),
+                ],
+              ),
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: CircleAvatar(
+              backgroundColor: colorScheme.primaryContainer,
+              child: Text(
+                initial,
+                style: TextStyle(
+                  color: colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
@@ -58,10 +72,19 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
         title: Text(_tabTitles[_selectedIndex]),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () async {
-              await ref.read(loginProvider.notifier).logout();
+            icon: Badge(
+              isLabelVisible: unreadCount > 0,
+              label: Text('$unreadCount'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            tooltip: 'Notices',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => _NoticesScreen(user: widget.user),
+                ),
+              );
             },
           ),
         ],
@@ -73,7 +96,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
           _ComplaintsTab(user: widget.user),
           _FeesTab(user: widget.user),
           _MessTab(user: widget.user),
-          _NotificationsTab(user: widget.user),
           _ChatTab(user: widget.user),
         ],
       ),
@@ -100,19 +122,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             icon: Icon(Icons.restaurant_menu_outlined),
             selectedIcon: Icon(Icons.restaurant_menu_rounded),
             label: 'Mess',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: unreadCount > 0,
-              label: Text('$unreadCount'),
-              child: const Icon(Icons.notifications_outlined),
-            ),
-            selectedIcon: Badge(
-              isLabelVisible: unreadCount > 0,
-              label: Text('$unreadCount'),
-              child: const Icon(Icons.notifications_rounded),
-            ),
-            label: 'Notices',
           ),
           const NavigationDestination(
             icon: Icon(Icons.smart_toy_outlined),
@@ -240,9 +249,9 @@ class _HomeTab extends ConsumerWidget {
           const SizedBox(height: 24),
           Text(
             'Quick Overview',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
 
@@ -322,8 +331,7 @@ class _HomeTab extends ConsumerWidget {
               Expanded(
                 child: feesAsync.when(
                   data: (fees) {
-                    final total =
-                        fees.fold<double>(0, (s, f) => s + f.amount);
+                    final total = fees.fold<double>(0, (s, f) => s + f.amount);
                     return _StatsCard(
                       icon: Icons.receipt_long_rounded,
                       color: fees.isEmpty ? Colors.green : Colors.red,
@@ -537,9 +545,9 @@ class _FeesTab extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Text(
                   'All Clear!',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -553,8 +561,10 @@ class _FeesTab extends ConsumerWidget {
 
         final pendingFees = fees.where((f) => !f.isPaid).toList();
         final paidFees = fees.where((f) => f.isPaid).toList();
-        final totalPending =
-            pendingFees.fold<double>(0, (s, f) => s + f.amount);
+        final totalPending = pendingFees.fold<double>(
+          0,
+          (s, f) => s + f.amount,
+        );
 
         return Column(
           children: [
@@ -663,11 +673,8 @@ class _FeesTab extends ConsumerWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   'Due: ${fee.dueDate.formatted}',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey[600]),
                                 ),
                               ],
                             ),
@@ -767,9 +774,9 @@ class _MessTab extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Text(
                     menu.date.formatted,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -802,7 +809,10 @@ class _MessTab extends ConsumerWidget {
                 Card(
                   color: Colors.blue.shade50,
                   child: ListTile(
-                    leading: Icon(Icons.info_outline, color: Colors.blue.shade700),
+                    leading: Icon(
+                      Icons.info_outline,
+                      color: Colors.blue.shade700,
+                    ),
                     title: const Text(
                       'Remarks',
                       style: TextStyle(fontWeight: FontWeight.w600),
@@ -909,6 +919,21 @@ class _MessTab extends ConsumerWidget {
   }
 }
 
+/// Full-screen notices page pushed from the bell icon
+class _NoticesScreen extends StatelessWidget {
+  final UserModel user;
+
+  const _NoticesScreen({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Notices')),
+      body: _NotificationsTab(user: user),
+    );
+  }
+}
+
 /// Notifications tab showing admin broadcasts
 class _NotificationsTab extends ConsumerWidget {
   final UserModel user;
@@ -955,10 +980,7 @@ class _NotificationsTab extends ConsumerWidget {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Colors.blue.shade100,
-                    child: const Icon(
-                      Icons.campaign,
-                      color: Colors.blue,
-                    ),
+                    child: const Icon(Icons.campaign, color: Colors.blue),
                   ),
                   title: Text(
                     notification.title,
@@ -974,8 +996,8 @@ class _NotificationsTab extends ConsumerWidget {
                         'From: ${notification.sentBy}  •  '
                         '${_formatDate(notification.createdAt)}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
@@ -1071,9 +1093,9 @@ class _InfoCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     ),
                   ],
                 ],
