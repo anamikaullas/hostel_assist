@@ -124,8 +124,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             label: 'Mess',
           ),
           const NavigationDestination(
-            icon: Icon(Icons.smart_toy_outlined),
-            selectedIcon: Icon(Icons.smart_toy_rounded),
+            icon: Icon(Icons.spa_outlined),
+            selectedIcon: Icon(Icons.spa_rounded),
             label: 'Assistant',
           ),
         ],
