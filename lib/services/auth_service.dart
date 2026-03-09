@@ -221,16 +221,49 @@ class AuthService {
   }
 
   /// Get current logged-in user data
+  /// If the user is authenticated but has no Firestore document,
+  /// a default document is created automatically to prevent errors.
   Future<UserModel?> getCurrentUser() async {
-    final uid = currentUser?.uid;
-    if (uid == null) return null;
+    final user = currentUser;
+    if (user == null) return null;
 
     try {
-      return await getUserById(uid);
+      return await getUserById(user.uid);
+    } on NotFoundException {
+      // User exists in Firebase Auth but not in Firestore.
+      // Auto-create the missing Firestore document.
+      _logger.w(
+        'Firestore document missing for authenticated user ${user.uid}. '
+        'Auto-creating document.',
+      );
+      return await _createMissingUserDocument(user);
     } catch (e) {
       _logger.e('Error fetching current user data', error: e);
       return null;
     }
+  }
+
+  /// Creates a Firestore user document for an authenticated user
+  /// whose document is missing (e.g., created via Firebase console).
+  Future<UserModel> _createMissingUserDocument(User user) async {
+    final now = DateTime.now();
+    final userModel = UserModel(
+      uid: user.uid,
+      email: user.email ?? 'unknown@email.com',
+      fullName: user.displayName ?? 'User',
+      role: AppConstants.roleStudent, // Default to student
+      phoneNumber: user.phoneNumber ?? '',
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await _firestore
+        .collection(AppConstants.collectionUsers)
+        .doc(user.uid)
+        .set(userModel.toJson());
+
+    _logger.i('Auto-created Firestore document for user: ${user.uid}');
+    return userModel;
   }
 
   /// Update user profile

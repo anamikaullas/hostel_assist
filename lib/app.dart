@@ -72,8 +72,50 @@ class AuthWrapper extends ConsumerWidget {
             }
 
             if (snapshot.hasError || !snapshot.hasData) {
-              return const Scaffold(
-                body: Center(child: Text('Error loading user data')),
+              return Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Error loading user data',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        snapshot.error?.toString() ?? 'User data not found',
+                        style: const TextStyle(color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          ref.invalidate(authStateProvider);
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          await ref.read(authServiceProvider).logout();
+                          ref.invalidate(authStateProvider);
+                        },
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Sign Out'),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }
 

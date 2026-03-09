@@ -67,7 +67,7 @@ class GeminiService {
       _logger.i('Sending message to Gemini API');
 
       final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$_apiKey',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$_apiKey',
       );
 
       // Build the prompt with context
