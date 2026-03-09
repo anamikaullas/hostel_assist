@@ -8,3 +8,4 @@ export 'mess_menu_model.dart';
 export 'feedback_model.dart';
 export 'fee_model.dart';
 export 'chatbot_model.dart';
+export 'notification_model.dart';

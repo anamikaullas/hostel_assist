@@ -78,7 +78,10 @@ class MessService {
         return null;
       }
 
-      return MessMenuModel.fromJson(querySnapshot.docs.first.data());
+      final firstDoc = querySnapshot.docs.first;
+      final menuData = Map<String, dynamic>.from(firstDoc.data());
+      menuData['menuId'] ??= firstDoc.id;
+      return MessMenuModel.fromJson(menuData);
     } catch (e) {
       _logger.e('Error fetching menu by date', error: e);
       throw FirestoreException(
@@ -107,9 +110,11 @@ class MessService {
           .orderBy('date', descending: false)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => MessMenuModel.fromJson(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['menuId'] ??= doc.id;
+        return MessMenuModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching menus in range', error: e);
       throw FirestoreException(
@@ -212,9 +217,11 @@ class MessService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => FeedbackModel.fromJson(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['feedbackId'] ??= doc.id;
+        return FeedbackModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching feedback', error: e);
       throw FirestoreException(
@@ -237,11 +244,11 @@ class MessService {
 
       final querySnapshot = await query.get();
 
-      return querySnapshot.docs
-          .map(
-            (doc) => FeedbackModel.fromJson(doc.data() as Map<String, dynamic>),
-          )
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data() as Map<String, dynamic>);
+        data['feedbackId'] ??= doc.id;
+        return FeedbackModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching all feedback', error: e);
       throw FirestoreException(

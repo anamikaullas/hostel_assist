@@ -7,3 +7,4 @@ export 'complaint_provider.dart';
 export 'fee_provider.dart';
 export 'mess_provider.dart';
 export 'chatbot_provider.dart';
+export 'notification_provider.dart';

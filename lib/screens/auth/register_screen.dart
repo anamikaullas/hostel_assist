@@ -5,7 +5,7 @@ import '../../constants/index.dart';
 import '../../providers/index.dart';
 import '../../utils/index.dart';
 
-/// Registration screen for students and admins
+/// Registration screen for students only
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
@@ -21,7 +21,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _enrollmentIdController = TextEditingController();
 
-  String _selectedRole = AppConstants.roleStudent;
   int _selectedYear = 1;
   bool _obscurePassword = true;
 
@@ -38,34 +37,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    final fullName = _fullNameController.text.trim();
-    final phone = _phoneController.text.trim();
-
-    if (_selectedRole == AppConstants.roleStudent) {
-      final enrollmentId = _enrollmentIdController.text.trim();
-
-      await ref
-          .read(registrationProvider.notifier)
-          .registerStudent(
-            email: email,
-            password: password,
-            fullName: fullName,
-            phoneNumber: phone,
-            enrollmentId: enrollmentId,
-            year: _selectedYear,
-          );
-    } else {
-      await ref
-          .read(registrationProvider.notifier)
-          .registerAdmin(
-            email: email,
-            password: password,
-            fullName: fullName,
-            phoneNumber: phone,
-          );
-    }
+    await ref
+        .read(registrationProvider.notifier)
+        .registerStudent(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          fullName: _fullNameController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+          enrollmentId: _enrollmentIdController.text.trim(),
+          year: _selectedYear,
+        );
   }
 
   @override
@@ -95,7 +76,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
+      appBar: AppBar(title: const Text('Create Account')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -104,36 +85,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Role selection
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: AppConstants.roleStudent,
-                      label: Text('Student'),
-                      icon: Icon(Icons.school),
-                    ),
-                    ButtonSegment(
-                      value: AppConstants.roleAdmin,
-                      label: Text('Admin'),
-                      icon: Icon(Icons.admin_panel_settings),
-                    ),
-                  ],
-                  selected: {_selectedRole},
-                  onSelectionChanged: (Set<String> newSelection) {
-                    setState(() {
-                      _selectedRole = newSelection.first;
-                    });
-                  },
+                Text(
+                  'Student Registration',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 4),
+                Text(
+                  'Fill in your details to create an account',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 28),
 
                 // Full Name
                 TextFormField(
                   controller: _fullNameController,
                   decoration: const InputDecoration(
                     labelText: 'Full Name',
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -150,8 +120,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -171,8 +140,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.phone_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -186,49 +154,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Student-specific fields
-                if (_selectedRole == AppConstants.roleStudent) ...[
-                  // Enrollment ID
-                  TextFormField(
-                    controller: _enrollmentIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'Enrollment ID',
-                      prefixIcon: Icon(Icons.badge),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your enrollment ID';
-                      }
-                      return null;
-                    },
+                // Enrollment ID
+                TextFormField(
+                  controller: _enrollmentIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Enrollment ID',
+                    prefixIcon: Icon(Icons.badge_outlined),
                   ),
-                  const SizedBox(height: 16),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your enrollment ID';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
 
-                  // Year selection
-                  DropdownButtonFormField<int>(
-                    initialValue: _selectedYear,
-                    decoration: const InputDecoration(
-                      labelText: 'Academic Year',
-                      prefixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [1, 2, 3, 4].map((year) {
-                      return DropdownMenuItem(
-                        value: year,
-                        child: Text('Year $year'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedYear = value;
-                        });
-                      }
-                    },
+                // Year selection
+                DropdownButtonFormField<int>(
+                  value: _selectedYear,
+                  decoration: const InputDecoration(
+                    labelText: 'Academic Year',
+                    prefixIcon: Icon(Icons.calendar_today_outlined),
                   ),
-                  const SizedBox(height: 16),
-                ],
+                  items: [1, 2, 3, 4].map((year) {
+                    return DropdownMenuItem(
+                      value: year,
+                      child: Text('Year $year'),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedYear = value;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
 
                 // Password
                 TextFormField(
@@ -236,13 +199,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
                       ),
                       onPressed: () {
                         setState(() {
@@ -261,23 +223,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
                 // Register button
-                ElevatedButton(
-                  onPressed: registrationState.isLoading
-                      ? null
-                      : _handleRegister,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                FilledButton(
+                  onPressed:
+                      registrationState.isLoading ? null : _handleRegister,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
                   ),
                   child: registrationState.isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
-                      : const Text('Register'),
+                      : const Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 16),
 
@@ -285,7 +255,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account? '),
+                    Text(
+                      'Already have an account? ',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);

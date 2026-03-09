@@ -172,7 +172,9 @@ class AuthService {
         throw NotFoundException('User data not found in database');
       }
 
-      final userModel = UserModel.fromJson(userDoc.data()!);
+      final loginData = Map<String, dynamic>.from(userDoc.data()!);
+      loginData['uid'] ??= uid;
+      final userModel = UserModel.fromJson(loginData);
       _logger.i('User logged in successfully: $uid (${userModel.role})');
 
       return userModel;
@@ -209,7 +211,9 @@ class AuthService {
         throw NotFoundException('User not found: $uid');
       }
 
-      return UserModel.fromJson(userDoc.data()!);
+      final userData = Map<String, dynamic>.from(userDoc.data()!);
+      userData['uid'] ??= uid;
+      return UserModel.fromJson(userData);
     } catch (e) {
       _logger.e('Error fetching user data', error: e);
       if (e is HostelAssistException) rethrow;

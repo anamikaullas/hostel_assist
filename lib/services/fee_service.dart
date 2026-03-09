@@ -119,9 +119,11 @@ class FeeService {
           .orderBy('dueDate', descending: true)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => FeeModel.fromJson(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['feeId'] ??= doc.id;
+        return FeeModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching student fees', error: e);
       throw FirestoreException(
@@ -144,9 +146,11 @@ class FeeService {
           .orderBy('dueDate', descending: true)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => FeeModel.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data() as Map<String, dynamic>);
+        data['feeId'] ??= doc.id;
+        return FeeModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching all fees', error: e);
       throw FirestoreException(
@@ -167,9 +171,11 @@ class FeeService {
           .where('dueDate', isLessThan: Timestamp.fromDate(now))
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => FeeModel.fromJson(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['feeId'] ??= doc.id;
+        return FeeModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching overdue fees', error: e);
       throw FirestoreException(
@@ -212,7 +218,9 @@ class FeeService {
         throw NotFoundException('Fee not found: $feeId');
       }
 
-      return FeeModel.fromJson(doc.data()!);
+      final feeData = Map<String, dynamic>.from(doc.data()!);
+      feeData['feeId'] ??= doc.id;
+      return FeeModel.fromJson(feeData);
     } catch (e) {
       _logger.e('Error fetching fee', error: e);
       if (e is HostelAssistException) rethrow;
@@ -300,9 +308,11 @@ class FeeService {
           .orderBy('dueDate')
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => FeeModel.fromJson(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['feeId'] ??= doc.id;
+        return FeeModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching pending fees', error: e);
       throw FirestoreException(

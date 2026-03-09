@@ -6,7 +6,6 @@ import 'models/index.dart';
 import 'providers/index.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
-import 'screens/admin/admin_dashboard.dart';
 import 'screens/student/student_dashboard.dart';
 
 /// Main app widget with routing and authentication handling
@@ -19,22 +18,50 @@ class HostelAssistApp extends ConsumerWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF3F51B5),
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
-        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 2),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+          scrolledUnderElevation: 2,
+        ),
         cardTheme: CardThemeData(
-          elevation: 2,
+          elevation: 1,
           shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        navigationBarTheme: const NavigationBarThemeData(
+          elevation: 8,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         ),
       ),
       home: const AuthWrapper(),
@@ -121,14 +148,50 @@ class AuthWrapper extends ConsumerWidget {
 
             final userData = snapshot.data!;
 
-            // Route based on user role
+            // Route based on user role — only students are served by this app
             if (userData.isStudent) {
               return StudentDashboard(user: userData);
-            } else if (userData.isAdmin) {
-              return AdminDashboard(user: userData);
             } else {
-              return const Scaffold(
-                body: Center(child: Text('Unknown user role')),
+              // Admin accounts must use the web admin panel
+              return Scaffold(
+                body: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.admin_panel_settings,
+                          size: 72,
+                          color: Colors.orange,
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Admin Access',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Admin accounts are managed through the web admin panel. '
+                          'Please use the admin panel URL to continue.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 32),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            await ref.read(authServiceProvider).logout();
+                          },
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Sign Out'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               );
             }
           },

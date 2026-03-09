@@ -101,18 +101,17 @@ class RoomAllocationService {
   /// Get all available rooms
   Future<List<RoomModel>> _getAvailableRooms() async {
     try {
+      // Fetch all rooms and filter client-side — Firestore does not support
+      // cross-field comparisons (currentOccupancy < capacity).
       final querySnapshot = await _firestore
           .collection(AppConstants.collectionRooms)
-          .where(
-            'currentOccupancy',
-            isLessThan: FieldPath.fromString('capacity'),
-          )
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => RoomModel.fromJson(doc.data()))
-          .where((room) => room.isAvailable)
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['roomId'] ??= doc.id;
+        return RoomModel.fromJson(data);
+      }).where((room) => room.isAvailable).toList();
     } catch (e) {
       _logger.e('Error fetching available rooms', error: e);
       throw FirestoreException(
@@ -230,7 +229,9 @@ class RoomAllocationService {
         throw NotFoundException('Room not found: $roomId');
       }
 
-      final room = RoomModel.fromJson(roomSnapshot.data()!);
+      final roomData = Map<String, dynamic>.from(roomSnapshot.data()!);
+      roomData['roomId'] ??= roomId;
+      final room = RoomModel.fromJson(roomData);
 
       // Verify room is still available
       if (room.currentOccupancy >= room.capacity) {
@@ -273,7 +274,9 @@ class RoomAllocationService {
           throw NotFoundException('Room not found: $roomId');
         }
 
-        final room = RoomModel.fromJson(roomSnapshot.data()!);
+        final roomData = Map<String, dynamic>.from(roomSnapshot.data()!);
+        roomData['roomId'] ??= roomId;
+        final room = RoomModel.fromJson(roomData);
 
         // Remove student from occupants
         final updatedOccupantIds = room.occupantIds
@@ -310,9 +313,11 @@ class RoomAllocationService {
           .collection(AppConstants.collectionRooms)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => RoomModel.fromJson(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['roomId'] ??= doc.id;
+        return RoomModel.fromJson(data);
+      }).toList();
     } catch (e) {
       _logger.e('Error fetching all rooms', error: e);
       throw FirestoreException(
@@ -334,7 +339,9 @@ class RoomAllocationService {
         throw NotFoundException('Room not found: $roomId');
       }
 
-      return RoomModel.fromJson(doc.data()!);
+      final roomData = Map<String, dynamic>.from(doc.data()!);
+      roomData['roomId'] ??= doc.id;
+      return RoomModel.fromJson(roomData);
     } catch (e) {
       _logger.e('Error fetching room', error: e);
       if (e is HostelAssistException) rethrow;
@@ -357,7 +364,9 @@ class RoomAllocationService {
         throw NotFoundException('User not found: $studentId');
       }
 
-      final user = UserModel.fromJson(userDoc.data()!);
+      final userData = Map<String, dynamic>.from(userDoc.data()!);
+      userData['uid'] ??= studentId;
+      final user = UserModel.fromJson(userData);
       if (user.roomId == null) return null;
 
       return await getRoomById(user.roomId!);
