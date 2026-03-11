@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -145,33 +144,6 @@ class ComplaintDetailScreen extends ConsumerWidget {
                 ),
               ],
             ),
-
-            // Image
-            if (complaint.imageUrl != null) ...[
-              const SizedBox(height: 16),
-              _buildInfoSection(
-                context,
-                title: 'Photo Evidence',
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: CachedNetworkImage(
-                      imageUrl: complaint.imageUrl!,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const SizedBox(
-                        height: 200,
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        height: 200,
-                        color: Colors.grey.shade200,
-                        child: const Icon(Icons.error),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
 
             // Admin Remarks
             if (complaint.adminRemarks != null) ...[

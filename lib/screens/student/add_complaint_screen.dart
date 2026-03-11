@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../constants/index.dart';
 import '../../models/index.dart';
@@ -23,10 +20,8 @@ class _AddComplaintScreenState extends ConsumerState<AddComplaintScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _complaintService = ComplaintService();
-  final _imagePicker = ImagePicker();
 
   String _selectedCategory = AppConstants.categoryMaintenance;
-  XFile? _selectedImage;
   bool _isSubmitting = false;
 
   final List<Map<String, dynamic>> _categories = [
@@ -73,60 +68,17 @@ class _AddComplaintScreenState extends ConsumerState<AddComplaintScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
-      );
-
-      if (image != null) {
-        setState(() => _selectedImage = image);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
-  Future<void> _takePicture() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
-      );
-
-      if (image != null) {
-        setState(() => _selectedImage = image);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error taking picture: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
   Future<void> _submitComplaint() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
 
     try {
-      await _complaintService.createComplaint(
+      await _complaintService.submitComplaint(
         studentId: widget.user.uid,
         studentName: widget.user.fullName,
         category: _selectedCategory,
         description: _descriptionController.text.trim(),
-        imageFile: _selectedImage,
       );
 
       if (mounted) {
@@ -280,64 +232,6 @@ class _AddComplaintScreenState extends ConsumerState<AddComplaintScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-
-              // Image Section
-              Text(
-                'Photo Evidence (Optional)',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-
-              if (_selectedImage != null)
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_selectedImage!.path),
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () {
-                          setState(() => _selectedImage = null);
-                        },
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.black54,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickImage,
-                        icon: const Icon(Icons.photo_library),
-                        label: const Text('Gallery'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _takePicture,
-                        icon: const Icon(Icons.camera_alt),
-                        label: const Text('Camera'),
-                      ),
-                    ),
-                  ],
-                ),
               const SizedBox(height: 32),
 
               // Submit Button
